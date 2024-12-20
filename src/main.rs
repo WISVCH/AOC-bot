@@ -13,6 +13,7 @@ const ANON_USER: &str = "Anonymous User";
 pub struct TodayEntry {
     pub name: Option<String>,
     pub score: i32,
+    pub rank: i32,
     pub star1: Option<String>,
     pub star2: Option<String>,
 }
