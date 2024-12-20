@@ -39,13 +39,12 @@ fn truncate(s: &str, max_chars: usize) -> &str {
 }
 
 async fn get_leaderboard_data() -> AochData {
-    let response_data = reqwest::get("https://aoch.wisv.ch/data")
+    reqwest::get("https://aoch.wisv.ch/data")
         .await
         .unwrap()
         .json()
         .await
-        .unwrap();
-    response_data
+        .unwrap()
 }
 
 /// Displays the overall leaderboard of this year
@@ -100,7 +99,7 @@ async fn leaderboard_total(ctx: Context<'_>) -> Result<(), Error> {
     );
 
     let mut stylized_answer = table_rows[0..cmp::min(row_count, table_rows.len())].join("\n");
-    stylized_answer = format!("```\n{}```", truncate(&*stylized_answer, 1990));
+    stylized_answer = format!("```\n{}```", truncate(&stylized_answer, 1990));
 
     ctx.say(stylized_answer).await?;
     Ok(())
@@ -157,7 +156,7 @@ async fn leaderboard_today(ctx: Context<'_>) -> Result<(), Error> {
     );
 
     let mut stylized_answer = table_rows[0..cmp::min(row_count, table_rows.len())].join("\n");
-    stylized_answer = format!("```\n{}```", truncate(&*stylized_answer, 1990));
+    stylized_answer = format!("```\n{}```", truncate(&stylized_answer, 1990));
     println!("{}", stylized_answer);
     ctx.say(stylized_answer).await?;
     Ok(())
