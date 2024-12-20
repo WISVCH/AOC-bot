@@ -2,6 +2,7 @@ use demoji_rs::remove_emoji;
 use poise::serenity_prelude as serenity;
 use serde::Deserialize;
 use std::cmp;
+use std::fmt::Write;
 
 struct Data {} // User data, which is stored and accessible in all command invocations
 type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -22,6 +23,7 @@ pub struct TotalEntry {
     pub name: Option<String>,
     pub score: i32,
     pub stars: [i32; 25],
+    pub rank: i32,
 }
 
 #[derive(Deserialize, Debug)]
@@ -63,19 +65,14 @@ async fn leaderboard_total(ctx: Context<'_>) -> Result<(), Error> {
         })
         .max()
         .unwrap();
-    let max_stars: usize = aoch_data
-        .total
-        .iter()
-        .map(|x| x.stars.clone().iter().sum::<i32>())
-        .max()
-        .unwrap() as usize;
-    let row_size: usize = start_width + 11 + max_stars;
+
+    let row_size: usize = start_width + 18 + 50;
     let row_count = 1900 / row_size;
 
     let mut table_rows = vec![];
     table_rows.push(format!(
-        "{1:0$} | {2:5} | {3:5}",
-        start_width, "Name", "Score", "Stars"
+        "{1:4} | {2:0$} | {3:5} | {4:5}",
+        start_width, "Rank", "Name", "Score", "01020304050607080910111213141516171819202122232425"
     ));
     table_rows.push(format!("{:-^row_size$}", ""));
 
@@ -86,13 +83,15 @@ async fn leaderboard_total(ctx: Context<'_>) -> Result<(), Error> {
             .map(|x| {
                 let name: String = remove_emoji(&x.name.unwrap_or_else(|| ANON_USER.to_string()));
 
-                let star_count = x.stars.iter().sum();
-                let mut stars: String = String::new();
-                for _ in 0..star_count {
-                    stars += "*";
-                }
+                let stars = x.stars.iter().fold(String::new(), |mut acc, &s| {
+                    let _ = write!(acc, "{:<2}", "*".repeat(s as usize));
+                    acc
+                });
 
-                format!("{name:0$} | {1:5} | {stars} ", start_width, x.score)
+                format!(
+                    "{2:>3}) | {name:0$} | {1:5} | {stars} ",
+                    start_width, x.score, x.rank
+                )
             })
             .collect::<Vec<String>>()
             .as_mut(),
@@ -126,7 +125,7 @@ async fn leaderboard_today(ctx: Context<'_>) -> Result<(), Error> {
 
     let mut table_rows = vec![];
     table_rows.push(format!(
-        "{4:5} | {1:0$} | {2:5} | {3:5}",
+        "{4:4} | {1:0$} | {2:5} | {3:5}",
         start_width, "Name", "Stars", "Score", "Rank"
     ));
     table_rows.push(format!("{:-^row_size$}", ""));
@@ -147,7 +146,7 @@ async fn leaderboard_today(ctx: Context<'_>) -> Result<(), Error> {
                 }
 
                 format!(
-                    "{2:>4}) | {name:0$} | {stars:<5} | {1:>5}",
+                    "{2:>3}) | {name:0$} | {stars:<5} | {1:>5}",
                     start_width, x.score, x.rank
                 )
             })
